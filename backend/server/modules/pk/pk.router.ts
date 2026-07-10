@@ -1,0 +1,12 @@
+import {Router} from 'express';
+import police from '../../share/police.share';
+import { sendChallengeController,DashBoardController,rejectChallengeController,acceptChallengeController,getChatHistoryController,cancelChallengeController,selectPitchp2pController } from './pk.controller';
+const router= Router();
+router.post('/send',police.required,sendChallengeController);
+router.patch('/reject',police.required,rejectChallengeController);
+router.patch('/cancel',police.required,cancelChallengeController);
+router.patch('/accept',police.required,acceptChallengeController);
+router.patch('/select',police.required,selectPitchp2pController);
+router.get('/dash',police.optional,DashBoardController);
+router.get('/chat-history/:challengeId',police.optional,getChatHistoryController);
+export default router;

@@ -1,0 +1,232 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Users {
+  id                Int                 @id @default(autoincrement())
+  username          String              @unique
+  email             String              @unique
+  password          String 
+  role              Role                @default(USER)    
+  balance           Float               @default(0) 
+  transactions      WalletTransaction[]
+  vouchers          Voucher[]
+
+  bookings          Booking[]
+  manageTeam        Team? 
+  organizedCups     Cup[]               @relation("CupOrganizer") 
+  messages          Message[]           @relation("chat")
+  
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Team {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  description       String?
+  leaderID          Int                 @unique @map("leader_id") 
+  leader            Users               @relation(fields: [leaderID], references: [id])
+  status            String              @default("ACTIVE")
+  elo               Decimal             @default(0)
+  cuppoint          Decimal             @default(0) @map("cup_point")
+
+  matchesAsTeamA    Match[]             @relation("TeamAMatches")
+  matchesAsTeamB    Match[]             @relation("TeamBMatches")
+  
+  cupRegistrations  CupRegistration[]
+  sentChallenges    Challenge[]         @relation("SentChallenges")
+  receivedChallenges Challenge[]        @relation("ReceivedChallenges")
+
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  @@map("teams")
+}
+
+model Challenge {
+  id           Int       @id @default(autoincrement())
+  challengerId Int       @map("challenger_id")
+  challenger   Team      @relation("SentChallenges", fields: [challengerId], references: [id])
+  opponentId   Int?       @map("opponent_id")
+  opponent     Team?      @relation("ReceivedChallenges", fields: [opponentId], references: [id])
+  status       String    @default("PENDING") 
+  match        Match?
+  messages     Message[]
+  pitchName String @map("pitch_name")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at") 
+
+  @@map("challenges")
+}
+
+model Message{
+  id           Int       @id @default(autoincrement())
+  challengeId  Int       @map("challenge_id")
+  senderId     Int       @map("sender_id")
+  challenge    Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  sender       Users     @relation("chat", fields: [senderId], references: [id])
+  content      String    @db.Text
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at") 
+  
+  @@map("messages")
+}
+
+model Match {
+  id              Int        @id @default(autoincrement())
+
+  teamAId         Int?       @map("team_a_id")
+  teamA           Team?      @relation("TeamAMatches", fields: [teamAId], references: [id])
+  teamBId         Int?       @map("team_b_id")
+  teamB           Team?      @relation("TeamBMatches", fields: [teamBId], references: [id])
+
+  bookingId       Int?       @unique @map("booking_id")
+  booking         Booking?   @relation(fields: [bookingId], references: [id])
+  
+  scoreA          Int?       @map("score_a")
+  scoreB          Int?       @map("score_b")
+  status          String     @default("SCHEDULED") 
+  
+  challengeId     Int?       @unique @map("challenge_id")
+  challenge       Challenge? @relation(fields: [challengeId], references: [id])
+  
+  cupId           Int?       @map("cup_id")
+  cup             Cup?       @relation(fields: [cupId], references: [id])
+  
+  roundName       String?    @map("round_name")
+  nextMatchId     Int?       @map("next_match_id")
+  
+  nextMatch       Match?     @relation("TournamentBracket", fields: [nextMatchId], references: [id])
+  previousMatches Match[]    @relation("TournamentBracket")
+  
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@map("matches")
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  startTime   DateTime @map("start_time")
+  endTime     DateTime @map("end_time")
+  totalPrice  Float    @map("total_price")
+  status      String   @default("PENDING") 
+  userId      Int      @map("user_id")
+  user        Users    @relation(fields: [userId], references: [id])
+  pitchId     Int      @map("pitch_id")
+  pitch       Pitch    @relation(fields: [pitchId], references: [id])
+  match       Match?
+  thachdau    Int  @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("bookings")
+}
+
+model Pitch {
+  id          Int       @id @default(autoincrement())
+  name        String   
+  basePrice   Float     @map("base_price")
+  status      String    @default("ACTIVE") 
+  bookings    Booking[]
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("pitches")
+}
+
+model SystemConfig {
+  id           Int @id @default(autoincrement())
+  
+  openTime     Int @default(5)  
+  closeTime    Int @default(23) 
+  slotDuration Int @default(60) 
+
+  @@map("system_configs")
+}
+
+model Cup {  
+  id          Int               @id @default(autoincrement())
+  name        String  
+  organizerId Int               @map("organizer_id")
+  organizer   Users             @relation("CupOrganizer", fields: [organizerId], references: [id])
+  status      String            @default("UPCOMING") 
+  
+  matches     Match[]
+  registrations CupRegistration[] 
+
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  @@map("cups")
+}
+
+model CupRegistration {
+  id        Int      @id @default(autoincrement())
+  cupId     Int      @map("cup_id")
+  cup       Cup      @relation(fields: [cupId], references: [id])
+  teamId    Int      @map("team_id")
+  team      Team     @relation(fields: [teamId], references: [id])
+  status    String   @default("PENDING") 
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([cupId, teamId]) 
+  @@map("cup_registrations")
+}
+
+model WalletTransaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  user        Users    @relation(fields: [userId], references: [id])
+  
+  amount      Float    
+  type        String   
+  status      String   @default("SUCCESS")
+  description String   
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("wallet_transactions")
+}
+
+model Voucher {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  discountValue Float    @map("discount_value") 
+  
+  userId        Int?     @map("user_id") 
+  user          Users?   @relation(fields: [userId], references: [id])
+  
+  isUsed        Boolean  @default(false) @map("is_used") 
+  expiryDate    DateTime @map("expiry_date") 
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("vouchers")
+}
+
+model Setting {
+  key   String @id 
+  value String    
+}
