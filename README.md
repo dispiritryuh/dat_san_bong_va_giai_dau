@@ -1,22 +1,45 @@
-# Football Pitch Booking System
+# Football Pitch Booking
 
-A full-stack web application for booking football pitches, managing teams, and interacting with other players in real time.
-
-## Overview
-
-This project was built as a personal learning project to practice modern full-stack development with Node.js and Next.js. The application allows users to browse football pitches, make bookings, create teams, challenge other teams, and receive real-time notifications.
+A full-stack web application for booking football pitches, managing teams, and coordinating football matches. The platform provides real-time interactions, notifications, and administrative tools to simplify football pitch management and player engagement.
 
 ## Features
 
-* User authentication with JWT
+### Authentication & Authorization
+
 * User registration and login
-* Browse and book football pitches
-* Manage personal profile
+* JWT-based authentication
+* Protected routes and role-based access control
+
+### Pitch Booking
+
+* Browse available football pitches
+* View pitch information and schedules
+* Create and manage bookings
+* Prevent booking conflicts with Redis locking
+
+### Team Management
+
 * Create and manage teams
-* Challenge other teams to matches
-* Real-time notifications and messaging using WebSocket
-* Admin management pages
-* Redis-based locking mechanism to prevent booking conflicts
+* View team information and members
+* Coordinate matches between teams
+
+### Match Challenges
+
+* Send and receive match challenges
+* Manage challenge requests and responses
+* Track scheduled matches
+
+### Real-Time Features
+
+* Real-time notifications
+* Real-time messaging and updates
+* WebSocket-based communication
+
+### Administration
+
+* Manage pitches and system resources
+* Monitor users and platform activities
+* Administrative dashboard
 
 ## Tech Stack
 
@@ -28,7 +51,7 @@ This project was built as a personal learning project to practice modern full-st
 * Prisma ORM
 * PostgreSQL
 * Redis
-* WebSocket (Socket.IO)
+* Socket.IO
 * Docker
 
 ### Frontend
@@ -45,25 +68,72 @@ This project was built as a personal learning project to practice modern full-st
 ├── backend
 │   ├── prisma
 │   ├── server
+│   │   ├── modules
+│   │   ├── real
+│   │   ├── share
+│   │   └── model
 │   └── package.json
 │
 ├── frontend
 │   ├── app
 │   ├── components
+│   ├── lib
+│   ├── service
 │   └── package.json
+│
+└── README.md
 ```
+
+## Architecture Overview
+
+### Backend
+
+The backend follows a modular architecture. Business domains are organized into independent modules, while shared services handle authentication, database access, notifications, and real-time communication.
+
+### Database
+
+PostgreSQL is used as the primary database, with Prisma ORM handling schema management and database access.
+
+### Caching & Concurrency
+
+Redis is used for caching and distributed locking to avoid booking conflicts and improve system responsiveness.
+
+### Real-Time Communication
+
+WebSocket communication enables instant notifications and interactive features such as messaging and challenge updates.
 
 ## Getting Started
 
-### Backend
+### Prerequisites
+
+* Node.js 20+
+* Docker and Docker Compose
+* PostgreSQL
+* Redis
+
+### Clone Repository
+
+```bash
+git clone https://github.com/dispiritryuh/football-pitch-booking.git
+cd football-pitch-booking
+```
+
+### Start Infrastructure
+
+```bash
+docker-compose up -d
+```
+
+### Backend Setup
 
 ```bash
 cd backend
 npm install
+npx prisma migrate dev
 npm run dev
 ```
 
-### Frontend
+### Frontend Setup
 
 ```bash
 cd frontend
@@ -71,33 +141,14 @@ npm install
 npm run dev
 ```
 
-### Database
+## Future Improvements
 
-Start PostgreSQL and Redis using Docker:
+* Payment integration
+* Advanced search and filtering
+* Email notifications
+* Mobile-friendly enhancements
+* Analytics and reporting dashboard
 
-```bash
-docker-compose up -d
-```
+## License
 
-Run Prisma migrations:
-
-```bash
-npx prisma migrate dev
-```
-
-## Learning Objectives
-
-This project was created to gain hands-on experience with:
-
-* Building RESTful APIs with Express.js
-* Designing modular backend architecture
-* Working with PostgreSQL and Prisma ORM
-* Implementing JWT authentication
-* Using Redis for caching and distributed locking
-* Building real-time features with WebSocket
-* Developing a full-stack application with Next.js and TypeScript
-* Using Docker for local development environments
-
-## Status
-
-This project is completed as a personal learning project and is no longer under active development.
+This project is available for educational and portfolio purposes.
